@@ -1,4 +1,6 @@
-CREATE TABLE IF NOT EXISTS crm.app_roles (
+CREATE SCHEMA IF NOT EXISTS crm AUTHORIZATION dev;
+
+CREATE TABLE IF NOT EXISTS app_roles (
     id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     role_name VARCHAR(50) NOT NULL UNIQUE,
     description VARCHAR(255),
@@ -8,7 +10,7 @@ CREATE TABLE IF NOT EXISTS crm.app_roles (
     updated_by VARCHAR(50)
 );
 
-CREATE TABLE IF NOT EXISTS crm.app_users (
+CREATE TABLE IF NOT EXISTS app_users (
     id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -20,6 +22,6 @@ CREATE TABLE IF NOT EXISTS crm.app_users (
     updated_by VARCHAR(50),
     deleted_at TIMESTAMP,
     role_id INT,
-    CONSTRAINT fk_app_users_role FOREIGN KEY (role_id) REFERENCES crm.app_roles(id) ON DELETE SET NULL
+    CONSTRAINT fk_app_users_role FOREIGN KEY (role_id) REFERENCES app_roles(id) ON DELETE SET NULL
 );
 
