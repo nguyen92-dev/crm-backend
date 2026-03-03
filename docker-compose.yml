@@ -1,0 +1,19 @@
+services:
+  database:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: nguyen3292
+      POSTGRES_DB: dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/docker
+    networks:
+      - default
+
+volumes:
+  db_data:
+networks:
+  default:
+    driver: bridge
