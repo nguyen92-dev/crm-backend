@@ -2,6 +2,8 @@ package vn.io.nguyen32.crm.appuser.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -13,6 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import top.nguyennd.restsqlbackend.abstraction.entity.AbstractEntity;
+import vn.io.nguyen32.crm.common.AppRoles;
 
 import java.time.LocalDateTime;
 
@@ -39,7 +42,12 @@ public class AppUser extends AbstractEntity {
   @Column(name = "deleted_at")
   LocalDateTime deletedAt;
 
+  @Column(name = "role_name")
+  @Enumerated(EnumType.STRING)
+  AppRoles roleName;
+
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "role_id")
+  @JoinColumn(name = "role_name", referencedColumnName = "role_name",
+      insertable = false, updatable = false)
   AppRole role;
 }

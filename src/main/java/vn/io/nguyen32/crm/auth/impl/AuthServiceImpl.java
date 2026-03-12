@@ -102,6 +102,9 @@ public class AuthServiceImpl implements IAuthService {
   }
 
   private List<String> buildRoles(AppRole role) {
+    if (role == null) {
+      return List.of();
+    }
     String rolePrefix = "ROLE_%s";
     return List.of(rolePrefix.formatted(role.getName()));
   }
