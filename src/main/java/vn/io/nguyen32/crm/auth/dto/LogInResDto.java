@@ -1,6 +1,7 @@
 package vn.io.nguyen32.crm.auth.dto;
 
 import lombok.Builder;
+import vn.io.nguyen32.crm.common.AppRoles;
 
 @Builder
 public record LogInResDto(
@@ -8,6 +9,6 @@ public record LogInResDto(
     String refreshToken,
     String username,
     String fullName,
-    String role
+    AppRoles role
 ) {
 }

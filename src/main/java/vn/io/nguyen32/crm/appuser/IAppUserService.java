@@ -1,9 +1,9 @@
 package vn.io.nguyen32.crm.appuser;
 
 import top.nguyennd.restsqlbackend.abstraction.pagedlist.IPagedListService;
-import vn.io.nguyen32.crm.appuser.dto.UserReqDto;
-import vn.io.nguyen32.crm.appuser.dto.UserResDto;
+import vn.io.nguyen32.crm.appuser.dto.AppUserBaseResDto;
+import vn.io.nguyen32.crm.appuser.dto.AppUserReqDto;
 
-public interface IAppUserService extends IPagedListService<UserResDto, UserReqDto> {
-  UserResDto addAppUser(UserReqDto user);
+public interface IAppUserService extends IPagedListService<AppUserBaseResDto, AppUserReqDto> {
+  AppUserBaseResDto createUser(AppUserReqDto reqDto);
 }

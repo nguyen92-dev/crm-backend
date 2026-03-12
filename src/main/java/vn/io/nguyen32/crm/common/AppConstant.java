@@ -23,4 +23,6 @@ public class AppConstant {
 
   // error messages
   public static final String LOGIN_FAIL_MSG = "Vui lòng nhập đúng tên đăng nhập và mật khẩu";
+
+  public static final AppRoles DEFAULT_ROLE = AppRoles.USER;
 }
