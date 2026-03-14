@@ -1,12 +1,5 @@
 package vn.io.nguyen32.crm.auth.impl;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.Payload;
-import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jwt.JWTClaimsSet;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -14,23 +7,19 @@ import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import top.nguyennd.restsqlbackend.abstraction.common.ErrorStatus;
-import top.nguyennd.restsqlbackend.abstraction.exception.BusinessException;
-import vn.io.nguyen32.crm.appuser.entity.AppRole;
 import vn.io.nguyen32.crm.appuser.entity.AppUser;
 import vn.io.nguyen32.crm.appuser.AppUserRepository;
 import vn.io.nguyen32.crm.auth.IAuthService;
 import vn.io.nguyen32.crm.auth.dto.LogInReqDto;
 import vn.io.nguyen32.crm.auth.dto.LogInResDto;
+import vn.io.nguyen32.crm.auth.dto.RefreshTokenDto;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static top.nguyennd.restsqlbackend.abstraction.exception.BusinessException.badRequest;
 import static vn.io.nguyen32.crm.common.AppConstant.LOGIN_FAIL_MSG;
+import static vn.io.nguyen32.crm.utils.JwtUtils.generateToken;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -61,51 +50,28 @@ public class AuthServiceImpl implements IAuthService {
       throw badRequest(LOGIN_FAIL_MSG);
     }
 
-    var token = generateToken(user);
+    var sessionId = UUID.randomUUID();
+    var token = generateToken(user, validDuration, signerKey, sessionId);
+    var refreshToken = generateRefreshToken(user, refreshableDuration, signerKey, sessionId);
 
     return LogInResDto.builder()
         .username(user.getUsername())
         .fullName(user.getFullName())
         .role(user.getRole().getName())
         .accessToken(token)
+        .refreshToken(refreshToken)
         .build();
   }
 
-  private String generateToken(AppUser user) {
-    JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
-
-    JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-        .subject(user.getUsername())
-        .issuer("nguyennd.top")
-        .issueTime(new Date())
-        .expirationTime(new Date(
-            Instant.now().plus(validDuration, ChronoUnit.SECONDS).toEpochMilli()))
-        .jwtID(UUID.randomUUID().toString())
-        .claim("roles", buildRoles(user.getRole()))
-        .claim("scope", buildScope(user))
+  private String generateRefreshToken(AppUser user, long refreshableDuration, String signerKey, UUID sessionId) {
+    String refreshToken = passwordEncoder.encode(UUID.randomUUID().toString());
+    RefreshTokenDto refreshTokenDto = RefreshTokenDto.builder()
+        .id(UUID.randomUUID())
+        .username(user.getUsername())
+        .expiredAt(LocalDateTime.now().plusDays(refreshableDuration))
+        .refreshToken(passwordEncoder.encode(refreshToken))
         .build();
-
-    Payload payload = new Payload(jwtClaimsSet.toJSONObject());
-
-    JWSObject jwsObject = new JWSObject(jwsHeader, payload);
-
-    try {
-      jwsObject.sign(new MACSigner(signerKey.getBytes()));
-      return jwsObject.serialize();
-    } catch (JOSEException e) {
-      throw new BusinessException(ErrorStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-    }
+    return refreshToken;
   }
 
-  private String buildScope(AppUser user) {
-    return "ROLE_%s".formatted(user.getRole().getName());
-  }
-
-  private List<String> buildRoles(AppRole role) {
-    if (role == null) {
-      return List.of();
-    }
-    String rolePrefix = "ROLE_%s";
-    return List.of(rolePrefix.formatted(role.getName()));
-  }
 }
