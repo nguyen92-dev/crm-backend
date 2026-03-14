@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS app_users (
     created_by VARCHAR(50),
     updated_by VARCHAR(50),
     deleted_at TIMESTAMP,
-    role_id INT,
-    CONSTRAINT fk_app_users_role FOREIGN KEY (role_id) REFERENCES app_roles(id) ON DELETE SET NULL
+    role_name VARCHAR(50),
+    CONSTRAINT fk_app_users_role FOREIGN KEY (role_name) REFERENCES app_roles(role_name) ON DELETE SET NULL
 );
 

@@ -5,6 +5,7 @@ services:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: nguyen3292
       POSTGRES_DB: dev
+      TZ: "Asia/Ho_Chi_Minh"
     ports:
       - "5432:5432"
     volumes:
