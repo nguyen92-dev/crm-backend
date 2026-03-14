@@ -25,6 +25,12 @@ public interface IAuthContract {
                                                   @RequestBody @Valid LogInReqDto reqDto);
 
   @PostMapping("/refresh")
+  @Operation(summary = "refresh token", description = "refresh token")
   ResponseEntity<BaseResponse<LogInResDto>> refresh(@CookieValue("refreshToken") String refreshToken,
                                                     HttpServletResponse response);
+
+  @PostMapping("/logout")
+  @Operation(summary = "logout", description = "logout")
+  ResponseEntity<BaseResponse<Void>> logOut(@CookieValue("refreshToken") String refreshToken,
+                                            HttpServletResponse response);
 }

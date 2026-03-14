@@ -75,7 +75,7 @@ public class AuthServiceImpl implements IAuthService {
   public LogInResDto refresh(HttpServletResponse response, String refreshToken) {
     Jwt jwt = decoder.decode(refreshToken);
     var sessionId = UUID.fromString(jwt.getClaimAsString("sId"));
-    String tokenKey = REFRESH_TOKEN.formatted(jwt.getSubject(), jwt.getClaimAsString("sId"));
+    String tokenKey = REFRESH_TOKEN.formatted(jwt.getSubject(), sessionId);
     if (!cacheService.isExist(tokenKey)) {
       throw new BusinessException(ErrorStatus.UNAUTHORIZED,"Invalid refresh token");
     }
@@ -83,11 +83,21 @@ public class AuthServiceImpl implements IAuthService {
         () -> badRequest("Nguoi dung %s khong con trong he thong".formatted(jwt.getSubject())));
     cacheService.getCache(tokenKey, RefreshTokenDto.class).ifPresent(refreshTokenDto -> {
       if (!validateSha256(refreshToken, refreshTokenDto.refreshToken())) {
-        cacheService.deleteCache(tokenKey);
+        cacheService.deleteAllByPattern(REFRESH_TOKEN.formatted(jwt.getSubject(), "*"));
+        refreshTokenServiceProxy.clearRefreshToken(response);
         throw new BusinessException(ErrorStatus.UNAUTHORIZED,"Invalid refresh token");
       }
+      cacheService.deleteCache(tokenKey);
     });
     return buildLoginResponse(user, sessionId, response);
+  }
+
+  @Override
+  public void logout(HttpServletResponse response, String refreshToken) {
+    Jwt jwt = decoder.decode(refreshToken);
+    String tokenKey = REFRESH_TOKEN.formatted(jwt.getSubject(), jwt.getClaimAsString("sId"));
+    cacheService.deleteCache(tokenKey);
+    refreshTokenServiceProxy.clearRefreshToken(response);
   }
 
   private LogInResDto buildLoginResponse(AppUser user, UUID sessionId, HttpServletResponse response) {

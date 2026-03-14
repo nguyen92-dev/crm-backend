@@ -31,6 +31,10 @@ public class RefreshTokenServiceProxyImpl implements IRefreshTokenServiceProxy {
 
   @Override
   public void clearRefreshToken(Object response) {
-
+    switch (response) {
+      case HttpServletResponse servletResponse -> refreshTokenCookieService.clearRefreshToken(servletResponse);
+      case LogInResDto.LogInResDtoBuilder dtoBuilder -> refreshTokenResponseService.clearRefreshToken(dtoBuilder);
+      default -> throw new IllegalArgumentException("Invalid response type");
+    }
   }
 }

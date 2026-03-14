@@ -28,7 +28,7 @@ public class RefreshTokenCookieService implements IRefreshTokenService<HttpServl
     ResponseCookie cookie = ResponseCookie.from(cookieName, refreshToken)
         .httpOnly(true)
         .secure(secure)
-        .path("/api/auth/refresh")
+        .path("/api/auth")
         .maxAge(Duration.ofDays(duration))
         .sameSite("None")
         .build();
@@ -41,7 +41,7 @@ public class RefreshTokenCookieService implements IRefreshTokenService<HttpServl
     ResponseCookie cookie = ResponseCookie.from(cookieName, "")
         .httpOnly(true)
         .secure(secure)
-        .path("/api/auth/refresh")
+        .path("/api/auth")
         .maxAge(Duration.ZERO)
         .sameSite("None")
         .build();

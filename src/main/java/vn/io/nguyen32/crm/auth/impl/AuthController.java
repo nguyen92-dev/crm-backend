@@ -31,4 +31,10 @@ public class AuthController implements IAuthContract {
     LogInResDto loginRes = authService.refresh(response, refreshToken);
     return ResponseEntity.ok(BaseResponse.buildSuccess(loginRes));
   }
+
+  @Override
+  public ResponseEntity<BaseResponse<Void>> logOut(String refreshToken, HttpServletResponse response) {
+    authService.logout(response, refreshToken);
+    return ResponseEntity.ok(BaseResponse.buildSuccess());
+  }
 }

@@ -8,4 +8,6 @@ public interface IAuthService {
   LogInResDto login(HttpServletResponse response, LogInReqDto reqDto);
 
   LogInResDto refresh(HttpServletResponse response, String refreshToken);
+
+  void logout(HttpServletResponse response, String refreshToken);
 }

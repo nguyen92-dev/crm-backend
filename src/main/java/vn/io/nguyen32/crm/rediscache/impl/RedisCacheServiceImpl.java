@@ -5,13 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import top.nguyennd.restsqlbackend.abstraction.common.ErrorStatus;
 import top.nguyennd.restsqlbackend.abstraction.exception.BusinessException;
 import vn.io.nguyen32.crm.rediscache.IRedisCacheService;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -73,6 +77,38 @@ public class RedisCacheServiceImpl implements IRedisCacheService {
   @Override
   public void deleteCache(String key) {
     redisTemplate.delete(key);
+  }
+
+  @Override
+  public void deleteCache(Collection<String> keys) {
+    redisTemplate.delete(keys);
+  }
+
+  @Override
+  public void deleteAllByPattern(String pattern) {
+    ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
+    redisTemplate.execute((RedisCallback<Void>) connection -> {
+      try (Cursor<byte[]> cursor = connection.keyCommands().scan(options)) {
+        while (cursor.hasNext()) {
+          connection.keyCommands().del(cursor.next());
+        }
+      }
+      return null;
+    });
+  }
+
+  @Override
+  public Collection<String> scanKeys(String pattern) {
+    ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
+    return redisTemplate.execute((RedisCallback<Collection<String>>) connection -> {
+      List<String> keys = new ArrayList<>();
+      try (Cursor<byte[]> cursor = connection.keyCommands().scan(options)) {
+        while (cursor.hasNext()) {
+          keys.add(new String(cursor.next()));
+        }
+        return keys;
+      }
+    });
   }
 
   @Override
