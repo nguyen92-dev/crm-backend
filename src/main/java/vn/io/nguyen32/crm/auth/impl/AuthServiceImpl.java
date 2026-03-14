@@ -7,7 +7,10 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import top.nguyennd.restsqlbackend.abstraction.common.ErrorStatus;
+import top.nguyennd.restsqlbackend.abstraction.exception.BusinessException;
 import vn.io.nguyen32.crm.appuser.entity.AppUser;
 import vn.io.nguyen32.crm.appuser.AppUserRepository;
 import vn.io.nguyen32.crm.auth.IAuthService;
@@ -15,6 +18,7 @@ import vn.io.nguyen32.crm.auth.IRefreshTokenServiceProxy;
 import vn.io.nguyen32.crm.auth.dto.LogInReqDto;
 import vn.io.nguyen32.crm.auth.dto.LogInResDto;
 import vn.io.nguyen32.crm.auth.dto.RefreshTokenDto;
+import vn.io.nguyen32.crm.configuration.jwt.JwtCustomDecoder;
 import vn.io.nguyen32.crm.rediscache.IRedisCacheService;
 
 import java.nio.charset.StandardCharsets;
@@ -40,6 +44,7 @@ public class AuthServiceImpl implements IAuthService {
   AppUserRepository userRepository;
   IRedisCacheService cacheService;
   IRefreshTokenServiceProxy refreshTokenServiceProxy;
+  JwtCustomDecoder decoder;
 
   @NonFinal
   @Value("${jwt.secret}")
@@ -63,17 +68,40 @@ public class AuthServiceImpl implements IAuthService {
     }
 
     var sessionId = UUID.randomUUID();
-    var token = generateAccessToken(user, validDuration, signerKey, sessionId);
-    var refreshToken = generateRefreshToken(user, refreshableDuration, signerKey, sessionId);
-    saveRefreshToken(user, refreshableDuration, refreshToken, sessionId);
+    return buildLoginResponse(user, sessionId, response);
+  }
+
+  @Override
+  public LogInResDto refresh(HttpServletResponse response, String refreshToken) {
+    Jwt jwt = decoder.decode(refreshToken);
+    var sessionId = UUID.fromString(jwt.getClaimAsString("sId"));
+    String tokenKey = REFRESH_TOKEN.formatted(jwt.getSubject(), jwt.getClaimAsString("sId"));
+    if (!cacheService.isExist(tokenKey)) {
+      throw new BusinessException(ErrorStatus.UNAUTHORIZED,"Invalid refresh token");
+    }
+    var user = userRepository.findByUsernameIgnoreCase(jwt.getSubject()).orElseThrow(
+        () -> badRequest("Nguoi dung %s khong con trong he thong".formatted(jwt.getSubject())));
+    cacheService.getCache(tokenKey, RefreshTokenDto.class).ifPresent(refreshTokenDto -> {
+      if (!validateSha256(refreshToken, refreshTokenDto.refreshToken())) {
+        cacheService.deleteCache(tokenKey);
+        throw new BusinessException(ErrorStatus.UNAUTHORIZED,"Invalid refresh token");
+      }
+    });
+    return buildLoginResponse(user, sessionId, response);
+  }
+
+  private LogInResDto buildLoginResponse(AppUser user, UUID sessionId, HttpServletResponse response) {
+    var newToken = generateAccessToken(user, validDuration, signerKey, sessionId);
+    var newRefreshToken = generateRefreshToken(user, refreshableDuration, signerKey, sessionId);
+    saveRefreshToken(user, refreshableDuration, newRefreshToken, sessionId);
 
     var resBuilder = LogInResDto.builder()
         .username(user.getUsername())
         .fullName(user.getFullName())
         .role(user.getRole().getName())
-        .accessToken(token);
+        .accessToken(newToken);
 
-    refreshTokenServiceProxy.addRefreshToken(response, refreshToken);
+    refreshTokenServiceProxy.addRefreshToken(response, newRefreshToken);
     return resBuilder
         .build();
   }

@@ -47,11 +47,6 @@ public class SecurityConfig {
   }
 
   @Bean
-  PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
-
-  @Bean
   CorsConfigurationSource corsConfigSource() {
     CorsConfiguration config = new CorsConfiguration();
     config.addAllowedOrigin("*");

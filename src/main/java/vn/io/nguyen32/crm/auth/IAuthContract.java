@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,4 +23,8 @@ public interface IAuthContract {
   @Operation(summary = "Dang nhap", description = "Dang nhap")
   ResponseEntity<BaseResponse<LogInResDto>> login(HttpServletResponse response,
                                                   @RequestBody @Valid LogInReqDto reqDto);
+
+  @PostMapping("/refresh")
+  ResponseEntity<BaseResponse<LogInResDto>> refresh(@CookieValue("refreshToken") String refreshToken,
+                                                    HttpServletResponse response);
 }
