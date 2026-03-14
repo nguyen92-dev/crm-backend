@@ -2,6 +2,7 @@ package vn.io.nguyen32.crm.auth;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -19,5 +20,6 @@ public interface IAuthContract {
 
   @PostMapping("/login")
   @Operation(summary = "Dang nhap", description = "Dang nhap")
-  ResponseEntity<BaseResponse<LogInResDto>> login(@RequestBody @Valid LogInReqDto reqDto);
+  ResponseEntity<BaseResponse<LogInResDto>> login(HttpServletResponse response,
+                                                  @RequestBody @Valid LogInReqDto reqDto);
 }

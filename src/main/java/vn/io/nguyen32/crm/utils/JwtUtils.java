@@ -23,21 +23,13 @@ import static java.util.Objects.isNull;
 
 @UtilityClass
 public class JwtUtils {
-  public static String generateToken(AppUser user, long validityInSec, String signerKey, UUID sessionId) {
+  public static String generateAccessToken(AppUser user, long validityInSec, String signerKey, UUID sessionId) {
+    var jwtClaimsSet = generateAccessTokenClaims(user, validityInSec, sessionId);
+    return generateToken(jwtClaimsSet, signerKey);
+  }
+
+  private String generateToken(JWTClaimsSet jwtClaimsSet, String signerKey) {
     JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
-
-    JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-        .subject(user.getUsername())
-        .issuer("nguyennd.top")
-        .issueTime(new Date())
-        .expirationTime(new Date(
-            Instant.now().plus(validityInSec, ChronoUnit.SECONDS).toEpochMilli()))
-        .jwtID(UUID.randomUUID().toString())
-        .claim("roles", buildRoles(user.getRole()))
-        .claim("scope", buildScope(user))
-        .claim("sId", sessionId.toString())
-        .build();
-
     Payload payload = new Payload(jwtClaimsSet.toJSONObject());
 
     JWSObject jwsObject = new JWSObject(jwsHeader, payload);
@@ -48,6 +40,37 @@ public class JwtUtils {
     } catch (JOSEException e) {
       throw new BusinessException(ErrorStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
+  }
+
+  private JWTClaimsSet generateAccessTokenClaims(AppUser user, long validityInSec, UUID sessionId) {
+    return new JWTClaimsSet.Builder()
+        .subject(user.getUsername())
+        .issuer("nguyennd.top")
+        .issueTime(new Date())
+        .expirationTime(new Date(
+            Instant.now().plus(validityInSec, ChronoUnit.SECONDS).toEpochMilli()))
+        .jwtID(UUID.randomUUID().toString())
+        .claim("roles", buildRoles(user.getRole()))
+        .claim("scope", buildScope(user))
+        .claim("sId", sessionId.toString())
+        .build();
+  }
+
+  private JWTClaimsSet generateRefreshTokenClaims(AppUser user, long validityInDay, UUID sessionId) {
+    return new JWTClaimsSet.Builder()
+        .subject(user.getUsername())
+        .issuer("nguyennd.top")
+        .issueTime(new Date())
+        .expirationTime(new Date(
+            Instant.now().plus(validityInDay, ChronoUnit.DAYS).toEpochMilli()))
+        .jwtID(UUID.randomUUID().toString())
+        .claim("sId", sessionId.toString())
+        .build();
+  }
+
+  public static String generateRefreshToken(AppUser user, long validityInDay, String signerKey, UUID sessionId) {
+    var jwtClaimsSet = generateRefreshTokenClaims(user, validityInDay, sessionId);
+    return generateToken(jwtClaimsSet, signerKey);
   }
 
   private String buildScope(AppUser user) {
