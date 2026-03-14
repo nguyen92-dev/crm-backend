@@ -1,5 +1,6 @@
 package vn.io.nguyen32.crm.auth.impl;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -19,8 +20,21 @@ public class AuthController implements IAuthContract {
   IAuthService authService;
 
   @Override
-  public ResponseEntity<BaseResponse<LogInResDto>> login(LogInReqDto reqDto) {
-    LogInResDto loginRes = authService.login(reqDto);
+  public ResponseEntity<BaseResponse<LogInResDto>> login(HttpServletResponse response,
+                                                         LogInReqDto reqDto) {
+    LogInResDto loginRes = authService.login(response, reqDto);
     return ResponseEntity.ok(BaseResponse.buildSuccess(loginRes));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<LogInResDto>> refresh(String refreshToken, HttpServletResponse response) {
+    LogInResDto loginRes = authService.refresh(response, refreshToken);
+    return ResponseEntity.ok(BaseResponse.buildSuccess(loginRes));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<Void>> logOut(String refreshToken, HttpServletResponse response) {
+    authService.logout(response, refreshToken);
+    return ResponseEntity.ok(BaseResponse.buildSuccess());
   }
 }

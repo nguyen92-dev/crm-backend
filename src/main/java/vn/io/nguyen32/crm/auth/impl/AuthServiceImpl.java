@@ -1,36 +1,39 @@
 package vn.io.nguyen32.crm.auth.impl;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.Payload;
-import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jwt.JWTClaimsSet;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import top.nguyennd.restsqlbackend.abstraction.common.ErrorStatus;
 import top.nguyennd.restsqlbackend.abstraction.exception.BusinessException;
-import vn.io.nguyen32.crm.appuser.entity.AppRole;
 import vn.io.nguyen32.crm.appuser.entity.AppUser;
 import vn.io.nguyen32.crm.appuser.AppUserRepository;
 import vn.io.nguyen32.crm.auth.IAuthService;
+import vn.io.nguyen32.crm.auth.IRefreshTokenServiceProxy;
 import vn.io.nguyen32.crm.auth.dto.LogInReqDto;
 import vn.io.nguyen32.crm.auth.dto.LogInResDto;
+import vn.io.nguyen32.crm.auth.dto.RefreshTokenDto;
+import vn.io.nguyen32.crm.configuration.jwt.JwtCustomDecoder;
+import vn.io.nguyen32.crm.rediscache.IRedisCacheService;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static top.nguyennd.restsqlbackend.abstraction.exception.BusinessException.badRequest;
 import static vn.io.nguyen32.crm.common.AppConstant.LOGIN_FAIL_MSG;
+import static vn.io.nguyen32.crm.rediscache.CommonKey.REFRESH_TOKEN;
+import static vn.io.nguyen32.crm.utils.JwtUtils.generateAccessToken;
+import static vn.io.nguyen32.crm.utils.JwtUtils.generateRefreshToken;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -39,6 +42,9 @@ public class AuthServiceImpl implements IAuthService {
 
   PasswordEncoder passwordEncoder;
   AppUserRepository userRepository;
+  IRedisCacheService cacheService;
+  IRefreshTokenServiceProxy refreshTokenServiceProxy;
+  JwtCustomDecoder decoder;
 
   @NonFinal
   @Value("${jwt.secret}")
@@ -53,7 +59,7 @@ public class AuthServiceImpl implements IAuthService {
   protected long refreshableDuration;
 
   @Override
-  public LogInResDto login(LogInReqDto loginReq) {
+  public LogInResDto login(HttpServletResponse response, LogInReqDto loginReq) {
     var user = userRepository.findByUsernameIgnoreCase(loginReq.username()).orElseThrow(
         () -> badRequest(LOGIN_FAIL_MSG));
 
@@ -61,51 +67,78 @@ public class AuthServiceImpl implements IAuthService {
       throw badRequest(LOGIN_FAIL_MSG);
     }
 
-    var token = generateToken(user);
+    var sessionId = UUID.randomUUID();
+    return buildLoginResponse(user, sessionId, response);
+  }
 
-    return LogInResDto.builder()
+  @Override
+  public LogInResDto refresh(HttpServletResponse response, String refreshToken) {
+    Jwt jwt = decoder.decode(refreshToken);
+    var sessionId = UUID.fromString(jwt.getClaimAsString("sId"));
+    String tokenKey = REFRESH_TOKEN.formatted(jwt.getSubject(), sessionId);
+    if (!cacheService.isExist(tokenKey)) {
+      throw new BusinessException(ErrorStatus.UNAUTHORIZED,"Invalid refresh token");
+    }
+    var user = userRepository.findByUsernameIgnoreCase(jwt.getSubject()).orElseThrow(
+        () -> badRequest("Nguoi dung %s khong con trong he thong".formatted(jwt.getSubject())));
+    cacheService.getCache(tokenKey, RefreshTokenDto.class).ifPresent(refreshTokenDto -> {
+      if (!validateSha256(refreshToken, refreshTokenDto.refreshToken())) {
+        cacheService.deleteAllByPattern(REFRESH_TOKEN.formatted(jwt.getSubject(), "*"));
+        refreshTokenServiceProxy.clearRefreshToken(response);
+        throw new BusinessException(ErrorStatus.UNAUTHORIZED,"Invalid refresh token");
+      }
+      cacheService.deleteCache(tokenKey);
+    });
+    return buildLoginResponse(user, sessionId, response);
+  }
+
+  @Override
+  public void logout(HttpServletResponse response, String refreshToken) {
+    Jwt jwt = decoder.decode(refreshToken);
+    String tokenKey = REFRESH_TOKEN.formatted(jwt.getSubject(), jwt.getClaimAsString("sId"));
+    cacheService.deleteCache(tokenKey);
+    refreshTokenServiceProxy.clearRefreshToken(response);
+  }
+
+  private LogInResDto buildLoginResponse(AppUser user, UUID sessionId, HttpServletResponse response) {
+    var newToken = generateAccessToken(user, validDuration, signerKey, sessionId);
+    var newRefreshToken = generateRefreshToken(user, refreshableDuration, signerKey, sessionId);
+    saveRefreshToken(user, refreshableDuration, newRefreshToken, sessionId);
+
+    var resBuilder = LogInResDto.builder()
         .username(user.getUsername())
         .fullName(user.getFullName())
         .role(user.getRole().getName())
-        .accessToken(token)
+        .accessToken(newToken);
+
+    refreshTokenServiceProxy.addRefreshToken(response, newRefreshToken);
+    return resBuilder
         .build();
   }
 
-  private String generateToken(AppUser user) {
-    JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
-
-    JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-        .subject(user.getUsername())
-        .issuer("nguyennd.top")
-        .issueTime(new Date())
-        .expirationTime(new Date(
-            Instant.now().plus(validDuration, ChronoUnit.SECONDS).toEpochMilli()))
-        .jwtID(UUID.randomUUID().toString())
-        .claim("roles", buildRoles(user.getRole()))
-        .claim("scope", buildScope(user))
+  private void saveRefreshToken(AppUser user, long refreshableDuration, String refreshToken, UUID sessionId) {
+    RefreshTokenDto refreshTokenDto = RefreshTokenDto.builder()
+        .id(UUID.randomUUID())
+        .username(user.getUsername())
+        .expiredAt(LocalDateTime.now().plusDays(refreshableDuration))
+        .refreshToken(sha256Hex(refreshToken))
+        .sessionId(sessionId)
         .build();
+    cacheService.setCache(REFRESH_TOKEN.formatted(user.getUsername(), sessionId.toString()),
+        refreshTokenDto, refreshableDuration, TimeUnit.DAYS);
+  }
 
-    Payload payload = new Payload(jwtClaimsSet.toJSONObject());
+  private boolean validateSha256(String token, String hashedToken) {
+    return hashedToken.equals(sha256Hex(token));
+  }
 
-    JWSObject jwsObject = new JWSObject(jwsHeader, payload);
-
+  private String sha256Hex(String token) {
     try {
-      jwsObject.sign(new MACSigner(signerKey.getBytes()));
-      return jwsObject.serialize();
-    } catch (JOSEException e) {
-      throw new BusinessException(ErrorStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hashed = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+      return HexFormat.of().formatHex(hashed);
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalStateException(e);
     }
-  }
-
-  private String buildScope(AppUser user) {
-    return "ROLE_%s".formatted(user.getRole().getName());
-  }
-
-  private List<String> buildRoles(AppRole role) {
-    if (role == null) {
-      return List.of();
-    }
-    String rolePrefix = "ROLE_%s";
-    return List.of(rolePrefix.formatted(role.getName()));
   }
 }
