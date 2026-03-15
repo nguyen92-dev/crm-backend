@@ -6,4 +6,5 @@ import lombok.experimental.UtilityClass;
 public class CommonKey {
   public static final String REFRESH_TOKEN = "refreshToken:%s:%s";
   public static final String BLACKLIST_TOKEN = "blacklistToken:%s";
+  public static final String ENTITY_KEY = "entity:%s:%s";
 }
