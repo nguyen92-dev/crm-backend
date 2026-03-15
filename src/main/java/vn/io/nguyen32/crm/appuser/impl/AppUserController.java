@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import top.nguyennd.restsqlbackend.abstraction.common.ErrorStatus;
@@ -16,6 +15,7 @@ import vn.io.nguyen32.crm.appuser.IAppUserContract;
 import vn.io.nguyen32.crm.appuser.IAppUserService;
 import vn.io.nguyen32.crm.appuser.dto.AppUserBaseResDto;
 import vn.io.nguyen32.crm.appuser.dto.AppUserReqDto;
+import vn.io.nguyen32.crm.appuser.dto.AppUserUpdateReqDto;
 
 import java.net.URI;
 
@@ -41,9 +41,21 @@ public class AppUserController implements IAppUserContract {
 
   @Override
   public ResponseEntity<BaseResponse<AppUserBaseResDto>> getById(Integer id) {
-    AppUserBaseResDto result = appUserService.findById(id.longValue()).orElseThrow(
+    AppUserBaseResDto result = appUserService.findUserById(id.longValue()).orElseThrow(
         () -> new BusinessException(ErrorStatus.NOT_FOUND, "Khong tim thay nguoi dung")
     );
     return ResponseEntity.ok(BaseResponse.buildSuccess(result));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<AppUserBaseResDto>> updateUser(Long id, AppUserUpdateReqDto reqDto) {
+    AppUserBaseResDto result = appUserService.updateUser(id, reqDto);
+    return ResponseEntity.ok(BaseResponse.buildSuccess(result));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<Void>> deleteUser(Long id) {
+    appUserService.deleteById(id);
+    return ResponseEntity.ok(BaseResponse.buildSuccess());
   }
 }

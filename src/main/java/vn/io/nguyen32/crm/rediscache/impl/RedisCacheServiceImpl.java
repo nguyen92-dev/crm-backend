@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.Objects.isNull;
+
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -44,7 +46,7 @@ public class RedisCacheServiceImpl implements IRedisCacheService {
       return Optional.empty();
     }
     String result = redisTemplate.opsForValue().get(key);
-    return Optional.of(readValue(result, clazz));
+    return Optional.ofNullable(readValue(result, clazz));
   }
 
   @Override
@@ -58,7 +60,7 @@ public class RedisCacheServiceImpl implements IRedisCacheService {
       return Optional.empty();
     }
     String result = redisTemplate.opsForHash().get(key, hashKey).toString();
-    return Optional.of(readValue(result, clazz));
+    return Optional.ofNullable(readValue(result, clazz));
   }
 
   @Override
@@ -143,6 +145,9 @@ public class RedisCacheServiceImpl implements IRedisCacheService {
 
   private <T> T readValue(String value, Class<T> clazz) {
     try {
+      if (isNull(value) || value.isBlank() || value.equals("null")) {
+        return null;
+      }
       return objectMapper.readValue(value, clazz);
     } catch (JsonProcessingException e) {
       throw new BusinessException(ErrorStatus.INTERNAL_SERVER_ERROR, e.getMessage());

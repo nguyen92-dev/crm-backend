@@ -16,5 +16,5 @@ public interface UserMapper {
 
   AppUser toEntity(AppUserReqDto reqDto);
 
-  void updateEntity(AppUserReqDto reqDto, @MappingTarget AppUser entity);
+  void updateEntity(AppUserUpdateReqDto reqDto, @MappingTarget AppUser entity);
 }
