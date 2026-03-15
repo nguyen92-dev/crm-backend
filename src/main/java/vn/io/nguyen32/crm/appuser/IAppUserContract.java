@@ -27,6 +27,7 @@ import vn.io.nguyen32.crm.appuser.dto.AppUserUpdateReqDto;
 public interface IAppUserContract {
   @Operation(summary = "Danh sach nguoi dung", description = "Danh sach nguoi dung")
   @PostMapping("/paged-list")
+  @PreAuthorize("hasRole('ADMIN')")
   ResponseEntity<BaseResponse<PagedModel<AppUserBaseResDto>>> getPagedList(Pageable pageable,
                                                                            FilterReqDto filter);
 
@@ -41,10 +42,12 @@ public interface IAppUserContract {
 
   @Operation(summary = "Cap nhat nguoi dung", description = "Cap nhat nguoi dung")
   @PutMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   ResponseEntity<BaseResponse<AppUserBaseResDto>> updateUser(@PathVariable Long id,
                                                              @RequestBody @Valid AppUserUpdateReqDto reqDto);
 
   @Operation(summary = "Xoa nguoi dung", description = "Xoa nguoi dung")
   @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   ResponseEntity<BaseResponse<Void>> deleteUser(@PathVariable Long id);
 }
