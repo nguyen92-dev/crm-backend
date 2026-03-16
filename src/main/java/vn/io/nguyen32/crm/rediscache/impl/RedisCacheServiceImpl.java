@@ -36,7 +36,7 @@ public class RedisCacheServiceImpl implements IRedisCacheService {
   }
 
   @Override
-  public void setCache(String key, Object value, long ttl, TimeUnit timeUnit) {
+  public void setCache(String key, Object value, Long ttl, TimeUnit timeUnit) {
     redisTemplate.opsForValue().set(key, writeValueAsString(value), ttl, timeUnit);
   }
 

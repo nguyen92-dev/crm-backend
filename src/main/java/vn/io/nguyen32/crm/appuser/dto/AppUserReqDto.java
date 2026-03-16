@@ -3,7 +3,9 @@ package vn.io.nguyen32.crm.appuser.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 
+@Builder
 public record AppUserReqDto(
     @NotNull(message = "username la bat buoc")
     @NotEmpty(message = "username la bat buoc")
