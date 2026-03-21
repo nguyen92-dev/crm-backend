@@ -41,9 +41,7 @@ public class AppUserController implements IAppUserContract {
 
   @Override
   public ResponseEntity<BaseResponse<AppUserBaseResDto>> getById(Integer id) {
-    AppUserBaseResDto result = appUserService.findUserById(id.longValue()).orElseThrow(
-        () -> new BusinessException(ErrorStatus.NOT_FOUND, "Khong tim thay nguoi dung")
-    );
+    AppUserBaseResDto result = appUserService.findUserById(id.longValue());
     return ResponseEntity.ok(BaseResponse.buildSuccess(result));
   }
 

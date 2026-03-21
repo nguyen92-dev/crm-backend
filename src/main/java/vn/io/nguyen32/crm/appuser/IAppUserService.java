@@ -15,5 +15,5 @@ public interface IAppUserService extends IPagedListService<AppUserBaseResDto, Ap
   @Transactional
   AppUserBaseResDto updateUser(Long id, AppUserUpdateReqDto reqDto);
 
-  Optional<AppUserBaseResDto> findUserById(long id);
+  AppUserBaseResDto findUserById(long id);
 }
