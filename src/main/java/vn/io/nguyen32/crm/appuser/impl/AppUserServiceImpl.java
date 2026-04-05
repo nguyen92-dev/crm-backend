@@ -4,6 +4,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import top.nguyennd.restsqlbackend.abstraction.common.ErrorStatus;
 import top.nguyennd.restsqlbackend.abstraction.exception.BusinessException;
 import top.nguyennd.restsqlbackend.abstraction.pagedlist.AbstractPagedListService;
 import vn.io.nguyen32.crm.appuser.AppUserRepository;
@@ -70,9 +71,9 @@ public class AppUserServiceImpl extends AbstractPagedListService<AppUser, AppUse
 
   @Override
   public AppUserBaseResDto updateUser(Long id, AppUserUpdateReqDto reqDto) {
-    validateUniqueField("email", reqDto.email(), id);
     var user = repository.findById(id).orElseThrow(
         () -> BusinessException.notFound("Khong tim thay nguoi dung"));
+    validateUniqueField("email", reqDto.email(), id);
     mapper.updateEntity(reqDto, user);
     var dto = mapper.toResDto(repository.save(user));
     cacheService.setCache(ENTITY_KEY.formatted(getEntityClass().getSimpleName(), dto.id()),
@@ -81,15 +82,16 @@ public class AppUserServiceImpl extends AbstractPagedListService<AppUser, AppUse
   }
 
   @Override
-  public Optional<AppUserBaseResDto> findUserById(long id) {
-    if (cacheService.isExist(ENTITY_KEY.formatted(getEntityClass().getSimpleName(), id))) {
-      log.info("Get user {} from cache", id);
-      return cacheService.getCache(ENTITY_KEY.formatted(getEntityClass().getSimpleName(), id), AppUserBaseResDto.class);
-    }
-    log.info("Get user {} from database", id);
-    var optionalDto = repository.findById(id).map(mapper::toResDto);
-    cacheService.setCache(ENTITY_KEY.formatted(getEntityClass().getSimpleName(), id),
-        optionalDto.orElse(null), DEFAULT_USER_TTL_IN_MINUTES, TimeUnit.MINUTES);
-    return optionalDto;
+  public AppUserBaseResDto findUserById(long id) {
+    return cacheService.getCache(ENTITY_KEY.formatted(getEntityClass().getSimpleName(), id), AppUserBaseResDto.class)
+        .or(() -> {
+          log.info("Get user {} from database", id);
+          var dto = repository.findById(id).map(mapper::toResDto);
+          cacheService.setCache(ENTITY_KEY.formatted(getEntityClass().getSimpleName(), id),
+              dto.orElse(null), DEFAULT_USER_TTL_IN_MINUTES, TimeUnit.MINUTES);
+          return dto;
+        }).orElseThrow(
+            () -> new BusinessException(ErrorStatus.NOT_FOUND, "Khong tim thay nguoi dung")
+        );
   }
 }

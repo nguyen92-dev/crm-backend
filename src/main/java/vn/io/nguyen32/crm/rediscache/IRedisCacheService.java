@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 public interface IRedisCacheService {
   void setCache(String key, Object value);
-  void setCache(String key, Object value, long ttl, TimeUnit timeUnit);
+  void setCache(String key, Object value, Long ttl, TimeUnit timeUnit);
   <T> Optional<T> getCache(String key, Class<T> clazz);
   void setHashCache(String key, String hashKey, Object value);
   <T> Optional<T> getHashCache(String key, String hashKey, Class<T> clazz);
