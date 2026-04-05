@@ -5,16 +5,25 @@ services:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: nguyen3292
       POSTGRES_DB: dev
-      TZ: "Asia/Ho_Chi_Minh"
+      TZ: Asia/Ho_Chi_Minh
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - db_data:/var/lib/postgresql/docker
     networks:
       - default
-
+  cache:
+    image: redis:8.6-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --save 20 1 --loglevel warning --requirepass nguyen3292
+    volumes:
+      - cache:/data
 volumes:
   db_data:
+  cache:
+    driver: local
 networks:
   default:
     driver: bridge
