@@ -4,6 +4,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import top.nguyennd.restsqlbackend.abstraction.cache.ICacheService;
 import top.nguyennd.restsqlbackend.abstraction.common.ErrorStatus;
 import top.nguyennd.restsqlbackend.abstraction.exception.BusinessException;
 import top.nguyennd.restsqlbackend.abstraction.pagedlist.AbstractPagedListService;
@@ -33,11 +34,11 @@ public class AppUserServiceImpl extends AbstractPagedListService<AppUser, AppUse
   AppUserRepository repository;
   UserMapper mapper;
   PasswordEncoder passwordEncoder;
-  IRedisCacheService cacheService;
+  ICacheService cacheService;
 
   protected AppUserServiceImpl(AppUserRepository repository,
                                UserMapper mapper,
-                               IRedisCacheService cacheService,
+                               ICacheService cacheService,
                                PasswordEncoder passwordEncoder) {
     super(repository);
     this.repository = repository;
@@ -53,8 +54,18 @@ public class AppUserServiceImpl extends AbstractPagedListService<AppUser, AppUse
   }
 
   @Override
+  protected Class<AppUserBaseResDto> getResDtoClass() {
+    return AppUserBaseResDto.class;
+  }
+
+  @Override
   protected Function<AppUser, AppUserBaseResDto> getMapper() {
     return mapper::toResDto;
+  }
+
+  @Override
+  protected ICacheService getCacheService() {
+    return cacheService;
   }
 
   @Override

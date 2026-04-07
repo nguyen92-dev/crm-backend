@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS customer (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_name VARCHAR(255) NOT NULL,
+    phone CHAR(11) NOT NULL UNIQUE,
+    adddress VARCHAR(255),
+    email VARCHAR(255),
+    facebook VARCHAR(255),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(50),
+    updated_by VARCHAR(50)
+)

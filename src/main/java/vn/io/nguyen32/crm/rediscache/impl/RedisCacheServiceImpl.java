@@ -1,6 +1,7 @@
 package vn.io.nguyen32.crm.rediscache.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -73,7 +74,9 @@ public class RedisCacheServiceImpl implements IRedisCacheService {
     if (!isExist(key)) {
       return List.of();
     }
-    return redisTemplate.opsForList().range(key, 0, -1).stream().map(v -> readValue(v, clazz)).toList();
+    JavaType javaType = objectMapper.getTypeFactory().constructParametricType(List.class, clazz);
+    var object = redisTemplate.opsForValue().get(key);
+    return objectMapper.convertValue(object, javaType);
   }
 
   @Override

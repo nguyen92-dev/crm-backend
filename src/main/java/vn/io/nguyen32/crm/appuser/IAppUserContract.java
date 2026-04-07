@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import top.nguyennd.restsqlbackend.abstraction.controller.IPagedListController;
 import top.nguyennd.restsqlbackend.abstraction.dto.BaseResponse;
 import top.nguyennd.restsqlbackend.abstraction.pagedlist.FilterReqDto;
 import vn.io.nguyen32.crm.appuser.dto.AppUserBaseResDto;
@@ -24,7 +25,7 @@ import vn.io.nguyen32.crm.appuser.dto.AppUserUpdateReqDto;
 @Tag(name = "Quan ly nguoi dung", description = "Quan ly nguoi dung")
 @RequestMapping("api/v1/user")
 @Validated
-public interface IAppUserContract {
+public interface IAppUserContract extends IPagedListController<AppUserBaseResDto> {
   @Operation(summary = "Danh sach nguoi dung", description = "Danh sach nguoi dung")
   @PostMapping("/paged-list")
   @PreAuthorize("hasRole('ADMIN')")
@@ -38,7 +39,7 @@ public interface IAppUserContract {
 
   @Operation(summary = "Chi tiet nguoi dung", description = "Chi tiet nguoi dung")
   @GetMapping("/{id}")
-  ResponseEntity<BaseResponse<AppUserBaseResDto>> getById(@PathVariable Integer id);
+  ResponseEntity<BaseResponse<AppUserBaseResDto>> getById(@PathVariable Long id);
 
   @Operation(summary = "Cap nhat nguoi dung", description = "Cap nhat nguoi dung")
   @PutMapping("/{id}")
