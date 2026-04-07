@@ -15,14 +15,12 @@ import vn.io.nguyen32.crm.appuser.dto.AppUserReqDto;
 import vn.io.nguyen32.crm.appuser.dto.AppUserUpdateReqDto;
 import vn.io.nguyen32.crm.appuser.dto.UserMapper;
 import vn.io.nguyen32.crm.appuser.entity.AppUser;
-import vn.io.nguyen32.crm.rediscache.IRedisCacheService;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import static top.nguyennd.restsqlbackend.abstraction.cache.CommonKey.ENTITY_KEY;
 import static vn.io.nguyen32.crm.common.AppConstant.DEFAULT_ROLE;
-import static vn.io.nguyen32.crm.rediscache.CommonKey.ENTITY_KEY;
 
 @Slf4j
 @Service

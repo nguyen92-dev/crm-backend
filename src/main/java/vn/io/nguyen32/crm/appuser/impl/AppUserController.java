@@ -50,7 +50,7 @@ public class AppUserController implements IAppUserContract {
 
   @Override
   public ResponseEntity<BaseResponse<Void>> deleteUser(Long id) {
-    return deleteUser(id);
+    return doDeleteUser(id);
   }
 
   @Override

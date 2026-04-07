@@ -1,4 +1,10 @@
 package vn.io.nguyen32.crm.customer.dto;
 
-public class CustomerReqDTO {
+public record CustomerReqDTO(
+    String name,
+    String phone,
+    String email,
+    String facebook,
+    String address
+) {
 }
