@@ -5,12 +5,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -42,17 +41,18 @@ public class SecurityConfig {
             .jwtAuthenticationConverter(jwtConverter()))
         .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
     );
-    http.cors(cors -> cors.configurationSource(corsConfigSource()));
+    http.cors(Customizer.withDefaults());
     return http.build();
   }
 
   @Bean
-  CorsConfigurationSource corsConfigSource() {
+  CorsConfigurationSource corsConfigSource(CorsProperties corsProperties) {
     CorsConfiguration config = new CorsConfiguration();
-    config.addAllowedOrigin("*");
-    config.addAllowedMethod("*");
-    config.addAllowedHeader("*");
-    config.setAllowCredentials(true);
+    config.setAllowedOrigins(corsProperties.getAllowedOrigins());
+    config.setAllowedMethods(corsProperties.getAllowedMethods());
+    config.setAllowedHeaders(corsProperties.getAllowedHeaders());
+    config.setExposedHeaders(corsProperties.getExposedHeaders());
+    config.setAllowCredentials(corsProperties.getAllowCredentials());
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/api/**", config);
