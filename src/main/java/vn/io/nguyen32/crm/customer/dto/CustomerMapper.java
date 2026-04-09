@@ -1,4 +1,4 @@
-package vn.io.nguyen32.crm.appuser.dto;
+package vn.io.nguyen32.crm.customer.dto;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.MapperConfig;
@@ -6,18 +6,18 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 import top.nguyennd.restsqlbackend.abstraction.annotation.IgnoreAuditFields;
 import top.nguyennd.restsqlbackend.abstraction.annotation.MapAuditFields;
-import vn.io.nguyen32.crm.appuser.entity.AppUser;
+import vn.io.nguyen32.crm.customer.CustomerEntity;
 
 @Mapper(componentModel = "spring")
 @MapperConfig(unmappedTargetPolicy = ReportingPolicy.ERROR)
-public interface UserMapper {
+public interface CustomerMapper {
 
   @MapAuditFields
-  AppUserBaseResDto toResDto(AppUser entity);
+  CustomerResDTO toDto(CustomerEntity entity);
 
   @IgnoreAuditFields
-  AppUser toEntity(AppUserReqDto reqDto);
+  CustomerEntity toEntity(CustomerReqDTO dto);
 
   @IgnoreAuditFields
-  void updateEntity(AppUserUpdateReqDto reqDto, @MappingTarget AppUser entity);
+  void updateEntity(CustomerReqDTO dto, @MappingTarget CustomerEntity entity);
 }

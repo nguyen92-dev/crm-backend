@@ -4,6 +4,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import top.nguyennd.restsqlbackend.abstraction.cache.ICacheService;
 import top.nguyennd.restsqlbackend.abstraction.common.ErrorStatus;
 import top.nguyennd.restsqlbackend.abstraction.exception.BusinessException;
 import top.nguyennd.restsqlbackend.abstraction.pagedlist.AbstractPagedListService;
@@ -14,14 +15,12 @@ import vn.io.nguyen32.crm.appuser.dto.AppUserReqDto;
 import vn.io.nguyen32.crm.appuser.dto.AppUserUpdateReqDto;
 import vn.io.nguyen32.crm.appuser.dto.UserMapper;
 import vn.io.nguyen32.crm.appuser.entity.AppUser;
-import vn.io.nguyen32.crm.rediscache.IRedisCacheService;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import static top.nguyennd.restsqlbackend.abstraction.cache.CommonKey.ENTITY_KEY;
 import static vn.io.nguyen32.crm.common.AppConstant.DEFAULT_ROLE;
-import static vn.io.nguyen32.crm.rediscache.CommonKey.ENTITY_KEY;
 
 @Slf4j
 @Service
@@ -33,11 +32,11 @@ public class AppUserServiceImpl extends AbstractPagedListService<AppUser, AppUse
   AppUserRepository repository;
   UserMapper mapper;
   PasswordEncoder passwordEncoder;
-  IRedisCacheService cacheService;
+  ICacheService cacheService;
 
   protected AppUserServiceImpl(AppUserRepository repository,
                                UserMapper mapper,
-                               IRedisCacheService cacheService,
+                               ICacheService cacheService,
                                PasswordEncoder passwordEncoder) {
     super(repository);
     this.repository = repository;
@@ -53,8 +52,18 @@ public class AppUserServiceImpl extends AbstractPagedListService<AppUser, AppUse
   }
 
   @Override
+  protected Class<AppUserBaseResDto> getResDtoClass() {
+    return AppUserBaseResDto.class;
+  }
+
+  @Override
   protected Function<AppUser, AppUserBaseResDto> getMapper() {
     return mapper::toResDto;
+  }
+
+  @Override
+  protected ICacheService getCacheService() {
+    return cacheService;
   }
 
   @Override

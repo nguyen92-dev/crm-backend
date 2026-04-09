@@ -29,9 +29,9 @@ import java.util.HexFormat;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static top.nguyennd.restsqlbackend.abstraction.cache.CommonKey.REFRESH_TOKEN;
 import static top.nguyennd.restsqlbackend.abstraction.exception.BusinessException.badRequest;
 import static vn.io.nguyen32.crm.common.AppConstant.LOGIN_FAIL_MSG;
-import static vn.io.nguyen32.crm.rediscache.CommonKey.REFRESH_TOKEN;
 import static vn.io.nguyen32.crm.utils.JwtUtils.generateAccessToken;
 import static vn.io.nguyen32.crm.utils.JwtUtils.generateRefreshToken;
 

@@ -27,10 +27,10 @@ public class RefreshTokenCookieService implements IRefreshTokenService<HttpServl
   public void addRefreshToken(HttpServletResponse response, String refreshToken) {
     ResponseCookie cookie = ResponseCookie.from(cookieName, refreshToken)
         .httpOnly(true)
-        .secure(secure)
+//        .secure(secure)
         .path("/api/auth")
         .maxAge(Duration.ofDays(duration))
-        .sameSite("None")
+        .sameSite("Lax")
         .build();
 
     response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

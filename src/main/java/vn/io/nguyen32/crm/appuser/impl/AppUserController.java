@@ -7,10 +7,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import top.nguyennd.restsqlbackend.abstraction.common.ErrorStatus;
 import top.nguyennd.restsqlbackend.abstraction.dto.BaseResponse;
-import top.nguyennd.restsqlbackend.abstraction.exception.BusinessException;
 import top.nguyennd.restsqlbackend.abstraction.pagedlist.FilterReqDto;
+import top.nguyennd.restsqlbackend.abstraction.pagedlist.IPagedListService;
 import vn.io.nguyen32.crm.appuser.IAppUserContract;
 import vn.io.nguyen32.crm.appuser.IAppUserService;
 import vn.io.nguyen32.crm.appuser.dto.AppUserBaseResDto;
@@ -28,8 +27,7 @@ public class AppUserController implements IAppUserContract {
 
   @Override
   public ResponseEntity<BaseResponse<PagedModel<AppUserBaseResDto>>> getPagedList(Pageable pageable, FilterReqDto filter) {
-    PagedModel<AppUserBaseResDto> pagedModel = new PagedModel<>(appUserService.getPagedList(filter, pageable, true));
-    return ResponseEntity.ok(BaseResponse.buildSuccess(pagedModel));
+    return doGetPagedList(pageable, filter);
   }
 
   @Override
@@ -40,9 +38,8 @@ public class AppUserController implements IAppUserContract {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<AppUserBaseResDto>> getById(Integer id) {
-    AppUserBaseResDto result = appUserService.findUserById(id.longValue());
-    return ResponseEntity.ok(BaseResponse.buildSuccess(result));
+  public ResponseEntity<BaseResponse<AppUserBaseResDto>> getById(Long id) {
+    return doGetById(id);
   }
 
   @Override
@@ -53,7 +50,11 @@ public class AppUserController implements IAppUserContract {
 
   @Override
   public ResponseEntity<BaseResponse<Void>> deleteUser(Long id) {
-    appUserService.deleteById(id);
-    return ResponseEntity.ok(BaseResponse.buildSuccess());
+    return doDeleteUser(id);
+  }
+
+  @Override
+  public IPagedListService<AppUserBaseResDto> getService() {
+    return this.appUserService;
   }
 }

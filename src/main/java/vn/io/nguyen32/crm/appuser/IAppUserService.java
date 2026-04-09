@@ -8,7 +8,7 @@ import vn.io.nguyen32.crm.appuser.dto.AppUserUpdateReqDto;
 
 import java.util.Optional;
 
-public interface IAppUserService extends IPagedListService<AppUserBaseResDto, AppUserReqDto> {
+public interface IAppUserService extends IPagedListService<AppUserBaseResDto> {
   @Transactional
   AppUserBaseResDto createUser(AppUserReqDto reqDto);
 
