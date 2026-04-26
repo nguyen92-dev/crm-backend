@@ -6,14 +6,12 @@ import vn.io.nguyen32.crm.appuser.dto.AppUserBaseResDto;
 import vn.io.nguyen32.crm.appuser.dto.AppUserReqDto;
 import vn.io.nguyen32.crm.appuser.dto.AppUserUpdateReqDto;
 
-import java.util.Optional;
-
 public interface IAppUserService extends IPagedListService<AppUserBaseResDto> {
-  @Transactional
-  AppUserBaseResDto createUser(AppUserReqDto reqDto);
+    @Transactional
+    AppUserBaseResDto createUser(AppUserReqDto reqDto);
 
-  @Transactional
-  AppUserBaseResDto updateUser(Long id, AppUserUpdateReqDto reqDto);
+    @Transactional
+    AppUserBaseResDto updateUser(Long id, AppUserUpdateReqDto reqDto);
 
-  AppUserBaseResDto findUserById(long id);
+    AppUserBaseResDto findUserById(long id);
 }
