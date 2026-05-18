@@ -14,7 +14,7 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
-import top.nguyennd.restsqlbackend.abstraction.entity.AbstractEntity;
+import vn.io.nguyen32.crm.product.entity.key.SizeKey;
 
 import java.time.LocalDateTime;
 

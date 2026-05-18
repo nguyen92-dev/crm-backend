@@ -1,4 +1,4 @@
-package vn.io.nguyen32.crm.product.entity;
+package vn.io.nguyen32.crm.product.entity.key;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
