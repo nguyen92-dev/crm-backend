@@ -2,11 +2,12 @@ package vn.io.nguyen32.crm.product.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -14,27 +15,28 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import top.nguyennd.restsqlbackend.abstraction.entity.AbstractEntity;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Entity
-@Table(name = "product")
+@Table(name = "size")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@SuperBuilder
 @NoArgsConstructor
-public class Product extends AbstractEntity {
-  @Column(name = "name")
-  String name;
-  @Column(name = "description")
-  String description;
+@SuperBuilder
+@AllArgsConstructor
+public class CategorySize extends AbstractEntity {
 
-  @ManyToMany
-  @JoinTable(
-      name = "product_category_size",
-      joinColumns = @JoinColumn(name = "product_id"),
-      inverseJoinColumns = @JoinColumn(name = "category_size_id")
-  )
-  Set<CategorySize> sizes = new HashSet<>();
+  @Column(name = "size_name")
+  String sizeName;
+
+  @Column(name = "category_id")
+  Integer categoryId;
+
+  @Column(name = "price")
+  Double price;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "category_id", referencedColumnName = "id",
+  insertable = false, updatable = false)
+  Category category;
+
 }
